@@ -1,3 +1,4 @@
+
 # Tom Lancaster and Pat Rademacher (c) December 2019
 # CS 494/594 - Internetworking Protocols - IRC Project
 # File - server.py
@@ -7,11 +8,13 @@
 ###############################################################
 #           Libraries Imported
 ###############################################################
+
 import socket
 import select
 import sys
 import _thread
 import threading
+
 
 """The first argument AF_INET is the address domain of the 
 socket. This is used when we have an Internet Domain with 
@@ -34,6 +37,7 @@ IP_address = socket.gethostname()
 #print("IP_address =" + str(IP_address))
 server_ip = socket.gethostbyname(IP_address) #str(sys.argv[1]) 
 
+
 print("\nServer's IP Address is " + server_ip + "\n\n")
 IP_file = open("server_ip_address.txt", "w")
 IP_file.write(server_ip)
@@ -43,11 +47,14 @@ x = 0
 chatroom_names = {"Main Room": [], "Sports": [], "Cars": []}
 
 #Make functions?
+
 read_existing_users = open("existing_users.txt", "r")
 for line in read_existing_users:
         x = x + 1
         line = line.split()
+
         if (len(line)) != 4:   #Must follow format of username, password, first and last name 
+
                 print("\nThe input file is not correct")
 read_existing_users.close()
 existing_users = [['' for q in range (4)] for y in range (x)]
@@ -61,8 +68,10 @@ for line in read_existing_users:
         x = x + 1
 
 read_existing_users.close()
+
 print("# of users = " + str(len(existing_users)))
 print("x = " + str(x))
+
 client_status = True
 intro = True
 
@@ -70,6 +79,7 @@ intro = True
 #Port = 8081 #int(sys.argv[2]) 
 
 """ 
+
 Binds the server to an entered IP address and at the 
 specified port number. The client must be aware of these parameters. 
 """
@@ -78,6 +88,7 @@ server.bind((IP_address, port))
 """ 
 Listens for 100 active connections. This number can be 
 changed as per convenience. 
+
 """
 server.listen(100)
 
@@ -90,16 +101,20 @@ class user:
                 self.address = address[0]
         
         def create_new_user(self):
+
                 message = \
                 "\n\nType 'EXIT' at anytime to leave. Type 'BACK' to go to \
                 previous screen.\n\n\n\nPlease enter your first name:  "
+
                 self.connection.sendto(message.encode(), (self.address, port))
                 firstname_response = str(self.connection.recv(1024).decode())
                 firstname_response = firstname_response.strip()
                 message = "\n\nPlease enter your last name: "
                 self.connection.sendto(message.encode(), (self.address, port))
                 lastname_response = str(self.connection.recv(1024).decode())
+
                 lastname_response = lastname_response.strip()
+
                 message = "\n\nPlease enter your desired username: "
                 self.connection.sendto(message.encode(), (self.address, port))
                 username_response = str(self.connection.recv(1024).decode())
@@ -182,11 +197,13 @@ class user:
                 while True:
                         welcome = True
                         if (main_screen == True) and (go_back == True):
+
                                 welcome_message = "Welcome to PAT CHAT! A chatroom with attitude.\
                                                    Please type 'n' and hit ENTER if you are new user.'\
                                                    \n\nPlease type 'l' if you are an existing user and \
                                                    would like to login. \
                                                    \n\n\Please type 'EXIT' to logoff"
+
                                 self.connection.sendto(welcome_message.encode(), (self.address, port))
                                 go_back = False
                         response = str(self.connection.recv(1024).decode())
@@ -196,11 +213,13 @@ class user:
                                 if str(response) == str(login_responses[i]):
                                         invalid_input = False
                         while invalid_input == True:
+
                                 message = "Sorry, I could not compute your input, which means you did it incorrectly.\n\
                                            No offense, but I know since I'm a COMPUTER!.....dummy\n\n\
                                            Please try again, or type 'BACK' for previous screen,\n\
                                            or get the FRICK out of here by typing 'EXIT'\
                                            (If your feelings are hurt, you'll get over it....or not.)"
+
                                 self.connection.sendto(message.encode(), (self.address, port))
                                 main_screen = False
                                 response = self.connection.recv(1024).decode()
@@ -214,7 +233,9 @@ class user:
                                 username, password, firstname, lastname = self.existing_user()
                                 user = user_info(self.connection, self.address, username, password, firstname, lastname)
                         elif response == login_responses[2] or response == login_responses[3]:
+
                                 message = "\n\nSweet dude (or dudette), let's get you rolling with a new account!\n\n"
+
                                 self.connection.sendto(message.encode(), (self.address, port))
                                 username, password, firstname, lastname = self.create_new_user()
                                 user = user_info(self.connection, self.address, username, password, firstname, lastname)
@@ -234,9 +255,11 @@ class user:
                                         main_screen = True
                                         go_back = True
                         elif response == login_responses[4] or response == login_responses[5]: 
+
                                 message = "OH!...okay...well...so long, farewell, I don't care that\
                                            you're leaving...hope you have a GOOD TIME!\n \
                                            I'm not crying! You're crying!"
+
                                 self.connection.sendto(message.encode(), (self.address[0], port))
                                 welcome = False
                         if welcome == False:
@@ -291,9 +314,11 @@ def clientthread(conn, address, username):
 """Using the below function, we broadcast the message to all 
 clients who's object is not the same as the one sending 
 the message """
+
 def broadcast(message, connection):
         for i in range(len(list_of_clients)):
                 if list_of_clients[i] !=connection:
+
                         try:
                                 list_of_clients[i].sendto(message.encode(), (list_of_IP[i], port))
                         except:
@@ -302,6 +327,7 @@ def broadcast(message, connection):
                                 #if the link is broken, we remove the client"""
                                 #remove(list_of_clients[i]) 
                                 remove(list_of_clients[i])
+
 
 """The following function simply removes the object 
 from the list that was created at the beginning of 
@@ -323,6 +349,7 @@ def main_menu(connection, address, username):
                 join_a_chatroom(connection, address, username)
         elif response == main_menu_strings[4] or response == main_menu_strings[5]:
                 list_people_in_chatroom(connection, address, username)
+
 
 def create_a_chatroom(connection, address, username):
         message = "\nCool, what do you want to name your chatroom?\n"
@@ -346,6 +373,7 @@ def join_a_chatroom(connection, address, username):
                 chatroom_names[chatroom_name].append(username)
                 print(chatroom_names)
 
+
 def list_people_in_chatroom(connection, address, username):
         message = "\nCool, you want to see who's in a chatroom? Which one?\n"
         connection.sendto(message.encode(), (address, port))
@@ -364,6 +392,7 @@ def list_people_in_chatroom(connection, address, username):
         #        if people_in_chat[i] != chatroom_name and people_in_chat[i] in chatroom_names:
         #                break
                 
+
 while running:
 
         try:
@@ -378,9 +407,11 @@ while running:
             list_of_clients.append(conn)
             list_of_IP.append(addr[0])
             for q in range(len(list_of_IP)):
+
                 if list_of_IP[q] != addr[0]:
                         welcome_message = addr[0] + " has joined the room!"
                         list_of_clients[q].sendto(welcome_message.encode(), (list_of_IP[q], port))
+
 
             # prints the address of the user that just connected 
             print(addr[0] + " connected")
@@ -415,3 +446,4 @@ server.close()
 #if len(sys.argv) != 3: 
 #       print("Correct usage: script, IP address, port number")
 #       exit()
+
