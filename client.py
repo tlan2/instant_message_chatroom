@@ -27,9 +27,9 @@ server_ip_file=open("server_ip_address.txt", "r")
 if server_ip_file.mode == 'r':
     IP_address = server_ip_file.read()
     print('server IP address you are connecting to is ' + IP_address)
-IP_address = socket.gethostname() #str(sys.argv[1]) 
+#IP_address = socket.gethostname() #str(sys.argv[1]) 
 Port = 8083 #int(sys.argv[2])
-#IP_address = '131.252.208.103' 
+IP_address = '131.252.217.155' 
 server.connect((IP_address, Port)) 
 turn_user_name_on = False
 username = ''  
