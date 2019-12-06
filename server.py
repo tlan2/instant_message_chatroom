@@ -68,6 +68,20 @@ server.listen(100)
 list_of_clients = []
 list_of_IP = []
 clients_info = []
+
+###################################################################
+#     Classes & Functions
+###################################################################
+def client_crash_test(response, usrname):
+        if len(response)==0:   # length of data peeked 0?
+        print (usrname + " has disconnected.")  # client disconnected
+        break
+
+def client_crash_test_login(response):
+        if len(response)==0:
+        print("Unknown client program has crashed and left.")
+        break
+
 class user:
         def __init__(self, connection, address):
                 self.connection = connection
@@ -77,14 +91,17 @@ class user:
                 message = "\n\nType 'EXIT' at anytime to leave. Type 'BACK' to go to previous screen.\n\n\n\nPlease enter your first name:  "
                 self.connection.sendto(message.encode(), (self.address, port))
                 firstname_response = str(self.connection.recv(1024).decode())
+                client_crash_test_login(firstname_response)
                 firstname_response = firstname_response.strip()
                 message = "\n\nPlease enter your last name: "
                 self.connection.sendto(message.encode(), (self.address, port))
                 lastname_response = str(self.connection.recv(1024).decode())
+                client_crash_test_login(lastname_response)
                 lastname_response = lastname_response.strip()
                 message = "\n\nPlease enter your desired username: "
                 self.connection.sendto(message.encode(), (self.address, port))
                 username_response = str(self.connection.recv(1024).decode())
+                client_crash_test_login(username_response)
                 username_response = username_response.strip()
                 while True:
                         i = 0
@@ -94,6 +111,7 @@ class user:
                                         message = "\n\nSorry, that username is already taken\nTry a new one: "
                                         self.connection.sendto(message.encode(), (self.address, port))
                                         username_response = str(self.connection.recv(1024).decode())
+                                        client_crash_test_login(username_response)
                                         username_response = username_response.strip()
                                         does_user_exist = True
                                         break
@@ -102,10 +120,12 @@ class user:
                 message = "\n\nCool beans, the username " + username_response + " is available!\n\nPlease enter your password: "
                 self.connection.sendto(message.encode(), (self.address, port))
                 password_response = str(self.connection.recv(1024).decode())
+                client_crash_test_login(password_response)
                 password_response = password_response.strip()
                 message = "\n\nPlease enter your password again: "
                 self.connection.sendto(message.encode(), (self.address, port))
                 password2_response = str(self.connection.recv(1024).decode())
+                client_crash_test_login(password2_response)
                 password2_response = password2_response.strip()
                 while password_response != password2_response:
                         message = "\n\nThose didn't match! Please enter your password again: "
@@ -124,7 +144,8 @@ class user:
                 while True:
                         message = "\n\nPlease type in your username: "
                         self.connection.sendto(message.encode(), (self.address, port))
-                        response = str(self.connection.recv(1024).decode()) 
+                        response = str(self.connection.recv(1024).decode())
+                        client_crash_test_login(response) 
                         response = response.strip()
                         forloopbreak = False
                         for i in range(len(existing_users)):
@@ -135,6 +156,7 @@ class user:
                                         message = "\n\nWelcome back, " + existing_users[i][2] + "\n\nPlease type in the password for " + response + ":"
                                         self.connection.sendto(message.encode(), (self.address, port))
                                         password_response = str(self.connection.recv(1024).decode())
+                                        client_crash_test_login(password_response)
                                         password_response = password_response.strip()
                                         while password_response != existing_users[i][1]:
                                                 message = "\n\nSorry, " + existing_users[i][2] + ", that is not your correct password.\n\nPlease type in the password for " + response + ":"
@@ -171,6 +193,7 @@ class user:
                                 self.connection.sendto(welcome_message.encode(), (self.address, port))
                                 go_back = False
                         response = str(self.connection.recv(1024).decode())
+                        client_crash_test_login(response)
                         response = response.strip()
                         print(response)
                         for i in range(len(login_responses)):
@@ -183,6 +206,7 @@ class user:
                                 self.connection.sendto(message.encode(), (self.address, port))
                                 main_screen = False
                                 response = self.connection.recv(1024).decode()
+                                client_crash_test_login(response)
                                 response = str(response.strip())
                                 print(response)
                                 for i in range(len(login_responses)):
@@ -249,12 +273,14 @@ def clientthread(conn, address, username):
         while True:
                         try:
                                 message = conn.recv(1024).decode()
+                                client_crash_test(message, username)
                                 if message:
                                         message = message.strip()
                                         while message == '!':
                                                 currently, boc, bts = main_menu(conn, address, username, currently, boc, bts)
                                                 print("currently = " + currently)
                                                 message = conn.recv(1024).decode()
+                                                client_crash_test_login(response, username)
                                                 message = message.strip()
                                         """prints the message and address of the 
                                         user who just sent the message on the server 
@@ -297,6 +323,7 @@ def broadcast(message, connection, address, username, currently, boc, bts):
                     i = i + 1
             connection.sendto(server_message.encode(), (address, port))
             response = connection.recv(1024).decode()
+            client_crash_test(response, username)
             response = str(response.strip())
             room_values = response.split(",")
             print(room_values)
@@ -346,6 +373,7 @@ def main_menu(connection, address, username, currently, boc, bts):
         message = message + 'Enter "back" or "BACK" to go to the previous screen\n\n'
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
+        client_crash_test(response, username)
         response = str(response.strip())
         if response == main_menu_strings[0] or response == main_menu_strings[1]:
                 currently = create_a_chatroom(connection, address, username)
@@ -383,6 +411,7 @@ def create_a_chatroom(connection, address, username):
         while True:
             screen = False
             response = connection.recv(1024).decode()
+            client_crash_test(response, username)
             response = str(response.strip())
             if response not in chatroom_names:
                 chatroom_names[response]=[]
@@ -398,6 +427,7 @@ def create_a_chatroom(connection, address, username):
             if screen == True:
                 return currently_in
                 break
+
 def join_a_chatroom(connection, address, username):
     message = "\nCool, what chatroom do you want to join?\n"
     connection.sendto(message.encode(), (address, port))
@@ -412,6 +442,7 @@ def join_a_chatroom(connection, address, username):
             i = i + 1
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
+        client_crash_test(response, username)
         response = str(response.strip())
         if response in chatroom_names:
             chatroom_names[response].append(username)
@@ -454,6 +485,7 @@ def list_people_in_chatroom(connection, address, username):
                 i = i + 1
             connection.sendto(message.encode(), (address, port))
             response = connection.recv(1024).decode()
+            client_crash_test_login(response, username)
             response = str(response.strip())
             if response in chatroom_names:
                 message = "Users in " + response + ":"
@@ -509,6 +541,7 @@ def remove_user_from_chatroom(connection, address, username):
                 i = i + 1
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
+        client_crash_test(response, username)
         response = str(response.strip())
         if response in rooms_user_is_in:
                 chatroom_names[response].remove(username)
@@ -546,6 +579,7 @@ def remove_user_from_chatroom(connection, address, username):
                 message = "\n\nSorry, that input is not recognized. Try again..."
                 connection.sendto(message.encode(), (address, port))
 
+
                 
 while True:
 
@@ -558,6 +592,7 @@ while True:
         a message to all available people in the chatroom"""
         list_of_clients.append(conn)
         list_of_IP.append(addr[0])
+        username = addr[0]
         for q in range(len(list_of_IP)):
                 if list_of_IP[q] != addr[0]:
                         welcome_message = addr[0] + " has joined the room!"

@@ -5,6 +5,11 @@ import socket
 import select
 import sys
 
+def server_crash_test(message):
+    if not message:
+        print("Server is down!")
+        sys.exit(2)
+
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #if len(sys.argv) != 3: 
@@ -46,6 +51,7 @@ while True:
             #voices = engine.getProperty('voices')
             #engine.setProperty('voices', voices[19]) DEPRECATE?
             message = str(socks.recv(1024).decode())
+            server_crash_test(message)
             message = message.strip()
             message_cue = 'You have successfully signed in -- welcome to PAT CHAT! A chat room with attitude.'
             if message_cue in message:
