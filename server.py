@@ -74,13 +74,13 @@ clients_info = []
 ###################################################################
 def client_crash_test(response, usrname):
         if len(response)==0:   # length of data peeked 0?
-        print (usrname + " has disconnected.")  # client disconnected
-        break
+            print(usrname + " has disconnected.")  # client disconnected
+            return 0
 
 def client_crash_test_login(response):
         if len(response)==0:
-        print("Unknown client program has crashed and left.")
-        break
+            print("Unknown client program has crashed and left.")
+            return 0
 
 class user:
         def __init__(self, connection, address):
@@ -206,7 +206,7 @@ class user:
                                 self.connection.sendto(message.encode(), (self.address, port))
                                 main_screen = False
                                 response = self.connection.recv(1024).decode()
-                                client_crash_test_login(response)
+                                #client_crash_test_login(response)
                                 response = str(response.strip())
                                 print(response)
                                 for i in range(len(login_responses)):
@@ -280,7 +280,7 @@ def clientthread(conn, address, username):
                                                 currently, boc, bts = main_menu(conn, address, username, currently, boc, bts)
                                                 print("currently = " + currently)
                                                 message = conn.recv(1024).decode()
-                                                client_crash_test_login(response, username)
+                                                client_crash_test(response, username)
                                                 message = message.strip()
                                         """prints the message and address of the 
                                         user who just sent the message on the server 
