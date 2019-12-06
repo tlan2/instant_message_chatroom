@@ -75,12 +75,12 @@ clients_info = []
 def client_crash_test(response, usrname):
         if len(response)==0:   # length of data peeked 0?
             print(usrname + " has disconnected.")  # client disconnected
-            return 0
+            return True
 
 def client_crash_test_login(response):
         if len(response)==0:
             print("Unknown client program has crashed and left.")
-            return 0
+            return True
 
 class user:
         def __init__(self, connection, address):
@@ -270,17 +270,23 @@ def clientthread(conn, address, username):
         currently = 'Main Room'
         boc = True
         bts = False
+        remove_bool = False 
         while True:
                         try:
                                 message = conn.recv(1024).decode()
-                                client_crash_test(message, username)
+                                if client_crash_test(message, username):
+                                    #remove(conn, address, username)
+                                    remove_bool = True
+                                    break
                                 if message:
                                         message = message.strip()
                                         while message == '!':
                                                 currently, boc, bts = main_menu(conn, address, username, currently, boc, bts)
                                                 print("currently = " + currently)
                                                 message = conn.recv(1024).decode()
-                                                client_crash_test(response, username)
+                                                if client_crash_test(response, username):
+                                                    remove(conn, address, username)
+                                                    break
                                                 message = message.strip()
                                         """prints the message and address of the 
                                         user who just sent the message on the server 
@@ -295,9 +301,13 @@ def clientthread(conn, address, username):
                                 else:
                                         """message may have no content if the connection 
                                         is broken, in this case we remove the connection"""
-                                        remove(conn)  
+                                        remove(conn, address, username)
+                                        #break
                         except:                                      
                                 continue        
+        if remove_bool == True:
+            print("is this fricking woring?")
+            remove(conn, address, username)
 
 """Using the below function, we broadcast the message to all 
 clients who's object is not the same as the one sending 
@@ -356,9 +366,18 @@ def broadcast(message, connection, address, username, currently, boc, bts):
 """The following function simply removes the object 
 from the list that was created at the beginning of 
 the program"""
-def remove(connection):
+def remove(connection, address, username):
         if connection in list_of_clients:
                         list_of_clients.remove(connection)
+        if address in list_of_IP:
+                        list_of_IP.remove(address)
+        for i in range(len(clients_info)):
+                        if username == clients_info[i][0]:
+                            del(clients_info[i])
+                            break
+        for name in chatroom_names:
+            if username in chatroom_names[name]:
+                chatroom_names[name].remove(username)
 
 def main_menu(connection, address, username, currently, boc, bts):
         main_menu_strings = ['c', 'C', 'j', 'J', 'l', 'L', 'cl', 'CL', 'r', 'R', 'm1', 'M1', 'sm', 'SM', 'SR', 'sr', 'ci', 'CI', 'back', 'BACK']
@@ -605,11 +624,12 @@ while True:
         client = user(conn, addr)
         client = client.login()
         if client == False:
-                remove(conn)
+                remove(conn, addr[0], client.username)
                 conn.close()
                 
         else:
-                clients_info.append([client.username, client.connection, addr[0]])
+                clients_info.insert(0, [client.username, client.connection, addr[0]])
+                print(clients_info)
                 client.address = addr[0]
                 threading.Thread(target=clientthread, args=(client.connection, client.address, client.username)).start()
                 
