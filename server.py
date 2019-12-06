@@ -7,22 +7,18 @@ import select
 import sys
 import _thread
 import threading
-
 """The first argument AF_INET is the address domain of the 
 socket. This is used when we have an Internet Domain with 
-any two hosts. The second argument is the type of socket. 
+any two hosts The second argument is the type of socket. 
 SOCK_STREAM means that data or characters are read in 
 a continuous flow."""
-
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 port = 8083
-
 # checks whether sufficient arguments have been provided 
 #if len(sys.argv) != 3: 
 #       print("Correct usage: script, IP address, port number")
-#       exit()
- 
+#       exit() 
 
 # takes the first argument from command prompt as IP address 
 IP_address = socket.gethostname()
@@ -33,13 +29,11 @@ IP_file.write(server_ip)
 IP_file.close()
 x = 0
 chatroom_names = {"Main Room": [], "Sports": [], "Cars": []}
-
-#Make functions?
 read_existing_users = open("existing_users.txt", "r")
 for line in read_existing_users:
         x = x + 1
         line = line.split()
-        if (len(line)) != 4:   #Must follow format of username, password, first and last name 
+        if (len(line)) != 4:
                 print("\nThe input file is not correct")
 read_existing_users.close()
 existing_users = [['' for q in range (4)] for y in range (x)]
@@ -53,11 +47,9 @@ for line in read_existing_users:
         x = x + 1
 
 read_existing_users.close()
-print(len(existing_users))
-print(x)
 client_status = True
 intro = True
-
+currently = 'Main Room'
 # takes second argument from command prompt as port number 
 #Port = 8081 #int(sys.argv[2]) 
 
@@ -75,7 +67,7 @@ server.listen(100)
 
 list_of_clients = []
 list_of_IP = []
-
+clients_info = []
 class user:
         def __init__(self, connection, address):
                 self.connection = connection
@@ -172,10 +164,10 @@ class user:
                 while True:
                         welcome = True
                         if (main_screen == True) and (go_back == True):
-                                welcome_message = "Welcome to PAT CHAT! A chatroom with attitude.\n\n \
-                                                   Please type 'n' and hit ENTER if you are new user.'\
-                                                   \n\nPlease type 'l' if you are an existing user and \
-                                                   would like to login. \n\n\Please type 'EXIT' to logoff"
+                                welcome_message = "Welcome to PAT CHAT! A chatroom with attitude.\n\n"
+                                welcome_message = welcome_message + "Please type 'n' and hit ENTER if you are new user."
+                                welcome_message = welcome_message + "\n\nPlease type 'l' if you are an existing user and "
+                                welcome_message = welcome_message + "would like to login. \n\n\Please type 'EXIT' to logoff"
                                 self.connection.sendto(welcome_message.encode(), (self.address, port))
                                 go_back = False
                         response = str(self.connection.recv(1024).decode())
@@ -185,11 +177,9 @@ class user:
                                 if str(response) == str(login_responses[i]):
                                         invalid_input = False
                         while invalid_input == True:
-                                message = "Sorry, I could not compute your input, which means you did it incorrectly\n\
-                                           no offense, but I know since I'm a COMPUTER!.....dummy\n\n\
-                                           Please try again, or type 'BACK' for previous screen,\n\
-                                           or get the FRICK out of here by typing 'EXIT'\
-                                           (If your feelings are hurt, you'll get over it....or not.)"
+                                message = "Sorry, I could not compute your input, which means you did it incorrectly, no offense, but I know since I'm a COMPUTER!...\n\n"
+                                message = message + "Please try again, or type 'BACK' for previous screen, or get the FRICK out of here by typing 'EXIT'\n\n"
+                                message = message + "If your feelings are hurt, you'll get over it....or not.)"
                                 self.connection.sendto(message.encode(), (self.address, port))
                                 main_screen = False
                                 response = self.connection.recv(1024).decode()
@@ -245,21 +235,27 @@ class user_info(user):
                 
 def clientthread(conn, address, username):
         
-        #create_a_chatroom(conn, address, username)
-        #print(chatroom_names)
-        #join_a_chatroom(conn, address, username)
-       # print(chatroom_names)
-        #list_people_in_chatroom(conn, address, username)
-        # sends a message to the client whose user object is conn
-        message = "You have successfully signed in -- welcome to PAT CHAT! You are in the main room. Type'!' to see the main menu"
+        message = "You have successfully signed in -- welcome to PAT CHAT! You are in the main room. Type '!' to see the main menu at anytime."
+        message = message + "\n\nYou will need to be in the main menu in order to play with the different cool components PAT CHAT has to offer.\n\n"
         conn.sendto(message.encode(), (address, port))
+        print('\n\n\n\n' + address + '\n\n\n')
+        for usernames in chatroom_names:
+            if username not in chatroom_names['Main Room']:
+                chatroom_names['Main Room'].append(username)
+        print(chatroom_names)
+        currently = 'Main Room'
+        boc = True
+        bts = False
         while True:
                         try:
                                 message = conn.recv(1024).decode()
                                 if message:
                                         message = message.strip()
-                                        if message == '!':
-                                                main_menu(conn, address, username)
+                                        while message == '!':
+                                                currently, boc, bts = main_menu(conn, address, username, currently, boc, bts)
+                                                print("currently = " + currently)
+                                                message = conn.recv(1024).decode()
+                                                message = message.strip()
                                         """prints the message and address of the 
                                         user who just sent the message on the server 
                                         terminal"""
@@ -267,8 +263,8 @@ def clientthread(conn, address, username):
                                         #user_identifier = "<" + username + "> "
                                         #conn.sendto(user_identifier.encode(), (addr, port))
                                         # Calls broadcast function to send message to all 
-                                        #message_to_send = "<" + username + "> " + message
-                                        #broadcast(message_to_send, conn)
+                                        message_to_send = "<" + username + "> " + message
+                                        broadcast(message_to_send, conn, address, username, currently, boc, bts)
                         
                                 else:
                                         """message may have no content if the connection 
@@ -280,17 +276,55 @@ def clientthread(conn, address, username):
 """Using the below function, we broadcast the message to all 
 clients who's object is not the same as the one sending 
 the message """
-def broadcast(message, connection):
-        for i in range(len(list_of_clients)):
-                if list_of_clients[i] !=connection:
-                        try:
-                                list_of_clients[i].sendto(message.encode(), (list_of_IP[i], port))
-                        except:
-                                list_of_clients[i].close()
+def broadcast(message, connection, address, username, currently, boc, bts):
+        if boc == True and bts == False:
+            for name in chatroom_names[currently]:
+                if name != username:
+                    for i in range(len(clients_info)):
+                        if name == clients_info[i][0]:
+                            clients_info[i][1].sendto(message.encode(), (clients_info[i][2], port))
+        else:
+            message = message + '\n\n'
+            server_message = "\n\nAlright, cool, please select which room(s) you would like to send the message you just typed:\n\n"
+            server_message = server_message + "If you want to do multiple rooms, separate the numbers by a comma\n\n"
+            server_message = server_message + "For example: 1, 3, 7\n\n"
+            i = 1
+            rooms_user_is_in = []
+            for key, value in chatroom_names.items():
+                if username in value:
+                    server_message = server_message + str(i) + ': ' + key + '\n'
+                    rooms_user_is_in.append(key)
+                    i = i + 1
+            connection.sendto(server_message.encode(), (address, port))
+            response = connection.recv(1024).decode()
+            response = str(response.strip())
+            room_values = response.split(",")
+            print(room_values)
+            for i in range(len(room_values)):
+                print(room_values[i])
+                room_values[i] = int(room_values[i]) - 1
+                print(str(room_values[i]))
+            j = 0
+            rooms_to_send = []
+            for i in range(len(rooms_user_is_in)):
+                if i == room_values[j]:
+                    rooms_to_send.append(rooms_user_is_in[i])
+                    j = j + 1
+            print(rooms_to_send)
+            for name in rooms_to_send:
+                for names in chatroom_names[name]:
+                    if names != username:
+                        for i in range(len(clients_info)):
+                            if names == clients_info[i][0]:
+                                clients_info[i][1].sendto(message.encode(), (clients_info[i][2], port))
+
+                        #try:
+                        #        list_of_clients[i].sendto(message.encode(), (list_of_IP[i], port))
+                        #except:
+                        #        list_of_clients[i].close()
 
                                 #if the link is broken, we remove the client"""
-                                #remove(list_of_clients[i]) 
-                                remove(list_of_clients[i])
+                        #        remove(list_of_clients[i])
 
 """The following function simply removes the object 
 from the list that was created at the beginning of 
@@ -299,59 +333,219 @@ def remove(connection):
         if connection in list_of_clients:
                         list_of_clients.remove(connection)
 
-def main_menu(connection, address, username):
-        #print('\n\nMAIN MENU:\n\n'):
-        main_menu_strings = ['c', 'C', 'j', 'J', 'l', 'L', 'back', 'BACK']
-        message = '\n\nMAIN MENU:\n\nEnter "c" or "C" to create a chatroom\n\nEnter "j" or "J" to join a chatroom\n\nEnter "l" or "L" to list members in a chatroom\n\nEnter "back" or "BACK" to go to the previoius screen\n\n'
+def main_menu(connection, address, username, currently, boc, bts):
+        main_menu_strings = ['c', 'C', 'j', 'J', 'l', 'L', 'cl', 'CL', 'r', 'R', 'm1', 'M1', 'sm', 'SM', 'SR', 'sr', 'ci', 'CI', 'back', 'BACK']
+        message = '\n\nMAIN MENU:\n\n\nEnter "c" or "C" to create a chatroom -- this will automatically put you in the chatroom you create'
+        message = message + '\n\nEnter "j" or "J" to join a chatroom\n\n'
+        message = message + '\Enter "cl" or "CL" to list all chatrooms\n\n' 
+        message = message + 'Enter "l" or "L" to list members in a chatroom\n\n'
+        message = message + 'Enter "m1" or "M1" if you want your message to be seen by those who are in whatever room you are currently in\n\n'
+        message = message + 'Enter "sm" or "SM" if you want your message to be seen by members in a room or multiple rooms you are a part of\n\n' 
+        message = message + 'Enter "r" or "R" to remove yourself from a room you are currently in or are a part of\n\n'
+        message = message + 'Enter "ci" or "CI" to show what chatroom you are currently in\n\n'
+        message = message + 'Enter "back" or "BACK" to go to the previous screen\n\n'
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
         response = str(response.strip())
         if response == main_menu_strings[0] or response == main_menu_strings[1]:
-                create_a_chatroom(connection, address, username) 
+                currently = create_a_chatroom(connection, address, username)
+                return currently, boc, bts
         elif response == main_menu_strings[2] or response == main_menu_strings[3]: 
-                join_a_chatroom(connection, address, username)
+                currently = join_a_chatroom(connection, address, username)
+                return currently, boc, bts
         elif response == main_menu_strings[4] or response == main_menu_strings[5]:
                 list_people_in_chatroom(connection, address, username)
+                return currently, boc, bts
+        elif response == main_menu_strings[6] or response == main_menu_strings[7]:
+                list_all_chatrooms(connection, address, username)
+                return currently, boc, bts
+        elif response == main_menu_strings[8] or response == main_menu_strings[9]:
+                currently = remove_user_from_chatroom(connection, address, username)
+                return currently, boc, bts
+        elif response == main_menu_strings[10] or response == main_menu_strings[11]:
+                boc = True
+                bts = False
+                return currently, boc, bts
+        elif response == main_menu_strings[12] or response == main_menu_strings[13]:
+                boc = False
+                bts = True
+                return currently, boc, bts
+        elif response == main_menu_strings[16] or response == main_menu_strings[17]:
+                message = '\n\nYou are currently in ' + currently
+                connection.sendto(message.encode(), (address, port))
+                return currently, boc, bts
+        elif response == main_menu_strings[18] or response == main_menu_strings[19]:
+                return currently, boc, bts
 
 def create_a_chatroom(connection, address, username):
         message = "\nCool, what do you want to name your chatroom?\n"
         connection.sendto(message.encode(), (address, port))
-        response = connection.recv(1024).decode()
-        response = str(response.strip())
-        chatroom_names[response]=[]
-        chatroom_names[response].append(username)
-        #peopleons_in_chat.append(chatroom_name)
-        #for i in range(len(people_in_chat)):
-                #if people_in_chat[i] == chatroom_name:
-                        #people_in_chat.insert(i+1, username)
-                        #break
-
+        while True:
+            screen = False
+            response = connection.recv(1024).decode()
+            response = str(response.strip())
+            if response not in chatroom_names:
+                chatroom_names[response]=[]
+                chatroom_names[response].append(username)
+                message = '\n\nAlrighty, you have created the chatroom: ' + response
+                connection.sendto(message.encode(), (address, port))
+                currently_in = response
+                screen = True
+            else:
+                message = "\n\nSorry dawg, that chatroom name is already taken! Try another one\n\n"
+                connection.sendto(message.encode(), (address, port))
+                screen = False
+            if screen == True:
+                return currently_in
+                break
 def join_a_chatroom(connection, address, username):
-        message = "\nCool, what chatroom do you want to join?\n"
+    message = "\nCool, what chatroom do you want to join?\n"
+    connection.sendto(message.encode(), (address, port))
+    while True:
+        screen = False
+        i = 1
+        for key in chatroom_names.keys():
+            if i == 1:
+                message = str(i) + ': ' + key + '\n'
+            else:
+                message = message + str(i) + ': ' + key + '\n'
+            i = i + 1
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
-        chatroom_name = str(response.strip())
-        if chatroom_name in chatroom_names:
-                chatroom_names[chatroom_name].append(username)
-                print(chatroom_names)
+        response = str(response.strip())
+        if response in chatroom_names:
+            chatroom_names[response].append(username)
+            currently_in = response
+            screen = True
+            break
+        elif response.isdigit():
+            response = int(response)
+            response = response - 1
+            i = 0
+            if response not in range(len(chatroom_names)):
+                screen = False
+            else: 
+                for chatroom_name in chatroom_names:
+                    if response == i:
+                        screen = True
+                        chatroom_names[chatroom_name].append(username)
+                        currently_in = chatroom_name
+                        break
+                    else:
+                        i = i + 1
+        if screen == True:
+            return currently_in
+            break
+        else:
+            message = "\n\nSorry, that input is not recognized. Try again..."
+            connection.sendto(message.encode(), (address, port))
 
 def list_people_in_chatroom(connection, address, username):
         message = "\nCool, you want to see who's in a chatroom? Which one?\n"
         connection.sendto(message.encode(), (address, port))
-        response = connection.recv(1024).decode()
-        chatroom_name = str(response.strip())
-        message = "Users in " + chatroom_name + ":"
-        #connection.sendto(message.encode(), (address, port))
-        if chatroom_name in chatroom_names:
-                for i in range(len(chatroom_names[chatroom_name])):
-                       message = message + ' ' + chatroom_names[chatroom_name][i]
+        while True:
+            screen = False
+            i = 1
+            for key in chatroom_names.keys():
+                if i == 1:
+                    message = str(i) + ': ' + key + '\n'
+                else:
+                    message = message + str(i) + ': ' + key + '\n'
+                i = i + 1
+            connection.sendto(message.encode(), (address, port))
+            response = connection.recv(1024).decode()
+            response = str(response.strip())
+            if response in chatroom_names:
+                message = "Users in " + response + ":"
+                for q in range(len(chatroom_names[response])):
+                    message = message + ' ' + chatroom_names[response][q]
+                connection.sendto(message.encode(), (address, port))
+                screen = True
+                break
+            elif response.isdigit():
+                response = int(response)
+                response = response - 1
+                i = 0
+                if response not in range(len(chatroom_names)):
+                    screen = False
+                else:
+                    for chatroom_name in chatroom_names:
+                        if response == i:
+                            message = "Users in " + chatroom_name  + ":"
+                            for q in range(len(chatroom_names[chatroom_name])):
+                                message = message + ' ' + chatroom_names[chatroom_name][q]
+                            connection.sendto(message.encode(), (address, port))
+                            screen = True
+                            break
+                        else:
+                            i = i + 1
+            if screen == True:
+                break
+            else:
+                message = "\n\nSorry, that input is not recognized. Try again..."
+                connection.sendto(message.encode(), (address, port))
+
+
+
+def list_all_chatrooms(connection, address, username):
+    message = "\n\nCool, here are all the chatrooms available:\n\n"
+    i = 1
+    for key in chatroom_names.keys():
+        message = message + str(i) + ': ' + key + '\n'
+        i = i + 1
+    connection.sendto(message.encode(), (address, port))
+
+def remove_user_from_chatroom(connection, address, username):
+    message = "\n\nCool, what chatroom do you want to remove yourself from?\n\n"
+    name_of_removed_room = ''
+    while True:
+        screen = False
+        i = 1
+        rooms_user_is_in = []
+        for key, value in chatroom_names.items():
+            if username in value:
+                message = message + str(i) + ': ' + key + '\n'
+                rooms_user_is_in.append(key)
+                i = i + 1
         connection.sendto(message.encode(), (address, port))
-        #print("Users in " + chatroom_name + ":")
-        #for i in range(x, len(people_in_chat)):
-        #        if people_in_chat[i] != chatroom_name and people_in_chat[i] not in chatroom_names:
-        #                print(people_in_chat[i])
-        #        if people_in_chat[i] != chatroom_name and people_in_chat[i] in chatroom_names:
-        #                break
+        response = connection.recv(1024).decode()
+        response = str(response.strip())
+        if response in rooms_user_is_in:
+                chatroom_names[response].remove(username)
+                rooms_users_is_in.remove(response)
+                currently_in = chatroom_names['Main Room']
+                screen = True
+                break
+        elif response.isdigit():
+            response = int(response)
+            response = response - 1
+            i = 0
+            if response not in range(len(rooms_user_is_in)):
+                screen = False
+            else:
+                for chatroom_name in rooms_user_is_in:
+                        print("chatroom_name = " + chatroom_name + " and i = " + str(i))
+                        if response == i:
+                            if chatroom_name in chatroom_names:
+                                chatroom_names[chatroom_name].remove(username)
+                                name_of_removed_room = chatroom_name
+                            rooms_user_is_in.remove(chatroom_name)
+                            screen = True
+                            currently_in = 'Main Room'
+                            if username not in chatroom_names['Main Room']:
+                                chatroom_names['Main Room'].append(username)
+                            break
+                        else:
+                            i = i + 1
+            if screen == True:
+                message = "\n\nYou have successfully removed yourself from " + name_of_removed_room
+                connection.sendto(message.encode(), (address, port))
+                return currently_in
+                break
+            else:
+                message = "\n\nSorry, that input is not recognized. Try again..."
+                connection.sendto(message.encode(), (address, port))
+
                 
 while True:
 
@@ -380,9 +574,8 @@ while True:
                 conn.close()
                 
         else:
-                
-                #message = "\n\nYou are in the main room. Type'!' to see the main menu"
-                #conn.sendto(message.encode(), (client.address, port))
+                clients_info.append([client.username, client.connection, addr[0]])
+                client.address = addr[0]
                 threading.Thread(target=clientthread, args=(client.connection, client.address, client.username)).start()
                 
 conn.close()

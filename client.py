@@ -4,18 +4,6 @@
 import socket
 import select
 import sys
-#import pyttsx3
-
-i = 18 #What does this stand for?
-
-'''engine = pyttsx3.init()
-voices = engine.getProperty('voices')
-engine.setProperty('voices', voices[19])
-rate = engine.getProperty('rate')
-print("rate = " + str(rate))
-rate = rate + 50
-print("now rate = " + str(rate))
-engine.setProperty('rate', rate)'''
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
