@@ -199,7 +199,7 @@ class user:
                         while invalid_input == True:
                                 message = "Sorry, I could not compute your input, which means you did it incorrectly, no offense, but I know since I'm a COMPUTER!...\n\n"
                                 message = message + "Please try again, or type 'BACK' for previous screen, or get the FRICK out of here by typing 'EXIT'\n\n"
-                                message = message + "If your feelings are hurt, you'll get over it....or not.)"
+                                message = message + "If your feelings are hurt, you'll get over it (....or not.)"
                                 self.connection.sendto(message.encode(), (self.address, port))
                                 main_screen = False
                                 response = self.connection.recv(1024).decode()
