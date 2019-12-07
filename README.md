@@ -3,7 +3,7 @@
 Internet Chat Relay Program - Fall 2019 - CS494/594 - Internetworking Protocols - Nirupama Bulusu
 
 ### About
-Created in November/December 2020 with [Patrick Rademacher] (https://github.com/PatRademacher) for our CS494/594 Internetworking Protocols class. 
+Created in November/December 2020 with [Patrick Rademacher](https://github.com/PatRademacher) for our CS494/594 Internetworking Protocols class. 
 The project involved writing a RFC document, designing the Application Layer protocol, and then implementing a server and client based on the design. 
 
 ### Features
