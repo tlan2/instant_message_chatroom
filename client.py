@@ -13,7 +13,7 @@ if server_ip_file.mode == 'r':
     IP_address = server_ip_file.read()
     print('\nserver IP address you are connecting to is ' + IP_address + "\n")
 
-# ---- This line won't work on the school network for some reason ---
+# ---- This line won't work on the PSU network for some reason ---
 #IP_address = socket.gethostname()
 
 Port = 8083 

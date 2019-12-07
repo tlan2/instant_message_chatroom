@@ -306,7 +306,6 @@ def clientthread(conn, address, username):
                         except:                                      
                                 continue        
         if remove_bool == True:
-            print("is this fricking woring?")
             remove(conn, address, username)
 
 """Using the below function, we broadcast the message to all 
