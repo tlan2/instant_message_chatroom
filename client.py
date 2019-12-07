@@ -58,13 +58,15 @@ try:
                 else:
                     print(message)
             else:
-                username_output = "<" + username + ">"
+                username_output = ">>"
                 message = sys.stdin.readline()
                 if message.strip() == "exit" or message.strip() == "EXIT":
                     logout = True
                 total_output = username_output + " " + message.strip()
                 if turn_user_name_on == False:
                     server.sendto(message.encode(),(IP_address, Port))
+                    print(total_output)
+                    sys.stdout.flush()
                 else:
                     server.sendto(message.encode(),(IP_address, Port))
                     print(total_output)

@@ -2,56 +2,53 @@
 # CS 494/594 - Internetworking Protocols - IRC Project
 # File - server.py
 # Info: Python program to implement server side of chat room. 
+
+
 import socket
 import select
 import sys
 import _thread
 import threading
+import time
+import os
 """The first argument AF_INET is the address domain of the 
 socket. This is used when we have an Internet Domain with 
 any two hosts The second argument is the type of socket. 
 SOCK_STREAM means that data or characters are read in 
 a continuous flow."""
+
+
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 port = 8083
-# checks whether sufficient arguments have been provided 
-#if len(sys.argv) != 3: 
-#       print("Correct usage: script, IP address, port number")
-#       exit() 
-
-# takes the first argument from command prompt as IP address 
 IP_address = socket.gethostname()
-server_ip = socket.gethostbyname(IP_address) #str(sys.argv[1]) 
+server_ip = socket.gethostbyname(IP_address) 
 print("\nServer's IP Address is " + server_ip + "\n\n")
 IP_file = open("server_ip_address.txt", "w")
 IP_file.write(server_ip)
 IP_file.close()
-x = 0
+users = 0
 chatroom_names = {"Main Room": [], "Sports": [], "Cars": []}
 read_existing_users = open("existing_users.txt", "r")
 for line in read_existing_users:
-        x = x + 1
+        users = users + 1
         line = line.split()
         if (len(line)) != 4:
                 print("\nThe input file is not correct")
 read_existing_users.close()
-existing_users = [['' for q in range (4)] for y in range (x)]
-print(existing_users)
+existing_users = [['' for q in range (4)] for y in range (users)]
 read_existing_users = open("existing_users.txt", "r")
-x = 0
+users = 0
 for line in read_existing_users:
         line = line.split()
         for j in range(4):
-                existing_users[x][j] = line[j]
-        x = x + 1
+                existing_users[users][j] = line[j]
+        users = users + 1
 
 read_existing_users.close()
 client_status = True
 intro = True
 currently = 'Main Room'
-# takes second argument from command prompt as port number 
-#Port = 8081 #int(sys.argv[2]) 
 
 """ 
 binds the server to an entered IP address and at the 
@@ -266,7 +263,6 @@ def clientthread(conn, address, username):
         for usernames in chatroom_names:
             if username not in chatroom_names['Main Room']:
                 chatroom_names['Main Room'].append(username)
-        print(chatroom_names)
         currently = 'Main Room'
         boc = True
         bts = False
@@ -274,27 +270,21 @@ def clientthread(conn, address, username):
         while True:
                         try:
                                 message = conn.recv(1024).decode()
-                                if client_crash_test(message, username):
+                                if client_crash_test(message, username) or message.strip() == 'exit' or message.strip() == 'EXIT':
                                     #remove(conn, address, username)
                                     remove_bool = True
                                     break
-                                if message:
+                                elif message:
                                         message = message.strip()
                                         while message == '!':
                                                 currently, boc, bts = main_menu(conn, address, username, currently, boc, bts)
                                                 print("currently = " + currently)
                                                 message = conn.recv(1024).decode()
-                                                if client_crash_test(response, username):
-                                                    remove(conn, address, username)
-                                                    break
                                                 message = message.strip()
                                         """prints the message and address of the 
                                         user who just sent the message on the server 
                                         terminal"""
                                         print("<" + username + "> " + message)
-                                        #user_identifier = "<" + username + "> "
-                                        #conn.sendto(user_identifier.encode(), (addr, port))
-                                        # Calls broadcast function to send message to all 
                                         message_to_send = "<" + username + "> " + message
                                         broadcast(message_to_send, conn, address, username, currently, boc, bts)
                         
@@ -302,11 +292,9 @@ def clientthread(conn, address, username):
                                         """message may have no content if the connection 
                                         is broken, in this case we remove the connection"""
                                         remove(conn, address, username)
-                                        #break
                         except:                                      
                                 continue        
         if remove_bool == True:
-            print("is this fricking woring?")
             remove(conn, address, username)
 
 """Using the below function, we broadcast the message to all 
@@ -320,7 +308,7 @@ def broadcast(message, connection, address, username, currently, boc, bts):
                         if name == clients_info[i][0]:
                             clients_info[i][1].sendto(message.encode(), (clients_info[i][2], port))
         else:
-            message = message + '\n\n'
+            #message = username + " from " + currently + " says: " +  message + '\n\n'
             server_message = "\n\nAlright, cool, please select which room(s) you would like to send the message you just typed:\n\n"
             server_message = server_message + "If you want to do multiple rooms, separate the numbers by a comma\n\n"
             server_message = server_message + "For example: 1, 3, 7\n\n"
@@ -333,7 +321,6 @@ def broadcast(message, connection, address, username, currently, boc, bts):
                     i = i + 1
             connection.sendto(server_message.encode(), (address, port))
             response = connection.recv(1024).decode()
-            client_crash_test(response, username)
             response = str(response.strip())
             room_values = response.split(",")
             print(room_values)
@@ -353,15 +340,9 @@ def broadcast(message, connection, address, username, currently, boc, bts):
                     if names != username:
                         for i in range(len(clients_info)):
                             if names == clients_info[i][0]:
-                                clients_info[i][1].sendto(message.encode(), (clients_info[i][2], port))
+                                new_message =  "From " + currently + " to members of " + name + ": " +  message + '\n\n'
+                                clients_info[i][1].sendto(new_message.encode(), (clients_info[i][2], port))
 
-                        #try:
-                        #        list_of_clients[i].sendto(message.encode(), (list_of_IP[i], port))
-                        #except:
-                        #        list_of_clients[i].close()
-
-                                #if the link is broken, we remove the client"""
-                        #        remove(list_of_clients[i])
 
 """The following function simply removes the object 
 from the list that was created at the beginning of 
@@ -392,7 +373,8 @@ def main_menu(connection, address, username, currently, boc, bts):
         message = message + 'Enter "back" or "BACK" to go to the previous screen\n\n'
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
-        client_crash_test(response, username)
+        if client_crash_test(response, username):
+            return currently, boc, bts
         response = str(response.strip())
         if response == main_menu_strings[0] or response == main_menu_strings[1]:
                 currently = create_a_chatroom(connection, address, username)
@@ -430,7 +412,8 @@ def create_a_chatroom(connection, address, username):
         while True:
             screen = False
             response = connection.recv(1024).decode()
-            client_crash_test(response, username)
+            if client_crash_test(response, username):
+                break
             response = str(response.strip())
             if response not in chatroom_names:
                 chatroom_names[response]=[]
@@ -461,7 +444,8 @@ def join_a_chatroom(connection, address, username):
             i = i + 1
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
-        client_crash_test(response, username)
+        if client_crash_test(response, username):
+            break
         response = str(response.strip())
         if response in chatroom_names:
             chatroom_names[response].append(username)
@@ -484,6 +468,8 @@ def join_a_chatroom(connection, address, username):
                     else:
                         i = i + 1
         if screen == True:
+            message = "\nCool, you have successfully joined and are currently in: " + currently_in + "\n"
+            connection.sendto(message.encode(), (address, port))
             return currently_in
             break
         else:
@@ -504,7 +490,8 @@ def list_people_in_chatroom(connection, address, username):
                 i = i + 1
             connection.sendto(message.encode(), (address, port))
             response = connection.recv(1024).decode()
-            client_crash_test_login(response, username)
+            if client_crash_test(response, username):
+                break
             response = str(response.strip())
             if response in chatroom_names:
                 message = "Users in " + response + ":"
@@ -560,7 +547,8 @@ def remove_user_from_chatroom(connection, address, username):
                 i = i + 1
         connection.sendto(message.encode(), (address, port))
         response = connection.recv(1024).decode()
-        client_crash_test(response, username)
+        if client_crash_test(response, username):
+            break
         response = str(response.strip())
         if response in rooms_user_is_in:
                 chatroom_names[response].remove(username)
@@ -612,6 +600,8 @@ while True:
         list_of_clients.append(conn)
         list_of_IP.append(addr[0])
         username = addr[0]
+        exitt = False
+        server_exit = 'server exit'
         for q in range(len(list_of_IP)):
                 if list_of_IP[q] != addr[0]:
                         welcome_message = addr[0] + " has joined the room!"
@@ -631,7 +621,16 @@ while True:
                 clients_info.insert(0, [client.username, client.connection, addr[0]])
                 print(clients_info)
                 client.address = addr[0]
-                threading.Thread(target=clientthread, args=(client.connection, client.address, client.username)).start()
+                main_thread = threading.Thread(target=clientthread, args=(client.connection, client.address, client.username))
+                main_thread.start()
+                if input() == server_exit:
+                    message = "\n\nThe server has closed down intentionally and turned itself off\n\n"
+                    client.connection.sendto(message.encode(), (addr[0], port))
+                    break
                 
+time.sleep(2)
 conn.close()
 server.close()
+time.sleep(2)
+os._exit(0)
+
